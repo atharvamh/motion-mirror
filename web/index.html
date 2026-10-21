@@ -4,44 +4,59 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mirror Chicken</title>
+<meta name="description" content="Move in front of your camera and a chicken copies your whole body. Optionally drives a real robot arm.">
 <link rel="stylesheet" href="style.css">
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js" } }
 </script>
 </head>
 <body>
-<main>
-  <canvas id="stage" aria-label="Animated chicken that copies your arm movements"></canvas>
-  <div id="bawk" hidden>BAWK!</div>
-  <div id="preview">
-    <video id="video" playsinline muted></video>
-    <canvas id="overlay"></canvas>
+<canvas id="stage" aria-label="Animated chicken that copies your body movements"></canvas>
+
+<header class="top">
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><ellipse cx="16" cy="19" rx="10" ry="11" fill="#fff6e8" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="8" r="3.4" fill="var(--accent)"/></svg>
+    <div><h1>Mirror Chicken</h1><p>Full-body motion capture, in poultry</p></div>
   </div>
-  <p id="status" role="status">Allow the camera and flap your arms.</p>
-</main>
-<aside>
-  <h1>Mirror Chicken</h1>
+  <p id="status" class="pill" role="status">Press Start and step back so you're in frame.</p>
+  <ul class="chips" id="chips" hidden aria-label="Tracked body parts">
+    <li data-part="head">Head</li>
+    <li data-part="arms">Arms</li>
+    <li data-part="legs">Legs</li>
+    <li class="lat"><span id="v-lat">–</span></li>
+  </ul>
+</header>
+
+<div id="bawk" hidden>BAWK!</div>
+
+<section id="preview" class="card" hidden aria-label="Camera preview">
+  <video id="video" playsinline muted></video>
+  <canvas id="overlay"></canvas>
+  <span class="live">LIVE</span>
+</section>
+
+<nav class="dock" aria-label="Controls">
+  <button id="start" type="button" class="primary">Start camera</button>
+  <button id="demo" type="button">Demo</button>
+  <button id="robot-toggle" type="button" aria-expanded="false" aria-controls="robot">Robot arm</button>
+</nav>
+
+<aside id="robot" class="card" hidden aria-label="Robot arm">
+  <h2>Robot arm</h2>
+  <p class="hint">Mirrors one of your arms on a real servo arm over USB. Chrome or Edge.</p>
   <div class="row">
-    <button id="start" type="button">Start camera</button>
-    <button id="demo" type="button" class="ghost">Demo</button>
+    <button id="connect" type="button">Connect Arduino</button>
+    <select id="side" aria-label="Which of your arms drives the robot">
+      <option value="right">My right arm</option>
+      <option value="left">My left arm</option>
+    </select>
   </div>
-  <fieldset>
-    <legend>Robot arm (optional)</legend>
-    <div class="row">
-      <button id="connect" type="button" class="ghost">Connect Arduino</button>
-      <select id="side" aria-label="Which of your arms drives the robot">
-        <option value="right">my right arm</option>
-        <option value="left">my left arm</option>
-      </select>
-    </div>
-    <label class="check"><input type="checkbox" id="claw"> claw open</label>
-  </fieldset>
-  <dl>
-    <dt>Shoulder</dt><dd id="v-elev">–</dd>
-    <dt>Elbow bend</dt><dd id="v-flex">–</dd>
-    <dt>Servos</dt><dd id="v-servo">–</dd>
-    <dt>Pose latency</dt><dd id="v-lat">–</dd>
-    <dt>Last packet</dt><dd id="v-wire">–</dd>
+  <label class="switch"><input type="checkbox" id="claw"><span class="track"></span>Claw open</label>
+  <dl class="tiles">
+    <div><dt>Shoulder</dt><dd id="v-elev">–</dd></div>
+    <div><dt>Elbow bend</dt><dd id="v-flex">–</dd></div>
+    <div><dt>Servos</dt><dd id="v-servo">–</dd></div>
+    <div><dt>Last packet</dt><dd id="v-wire">–</dd></div>
   </dl>
 </aside>
 <script type="module" src="js/main.js"></script>

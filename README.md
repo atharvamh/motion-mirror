@@ -12,14 +12,17 @@ but with high latency. This version keeps that hardware path and adds a browser 
 npm run serve        # then open http://localhost:8000
 ```
 
-Click **Start camera** and flap. Both hands above your head makes it squawk. **Demo** runs
+Click **Start camera**, step back so the camera sees your whole body, and move. The chicken copies your
+head, torso lean and twist, whole-body turns (up to about 70° either way), both arms, both legs, squats, and sideways position.
+A single camera can't tell front from back, so past that angle the chicken holds its last good turn instead of flipping. Parts that are out of frame
+(e.g. your legs at a desk) relax to rest instead of flailing. Both hands above your head makes it squawk. **Demo** runs
 a synthetic person if you have no camera. Everything runs on-device; no video is uploaded.
 (Three.js and MediaPipe load from the jsDelivr CDN and the pose model from Google's
 MediaPipe bucket, so the first load needs internet.)
 
 - Pose: MediaPipe PoseLandmarker (BlazePose) with 3D *world* landmarks, GPU delegate with CPU fallback.
 - Smoothing: One Euro filter per landmark coordinate (adaptive: smooth when still, responsive when moving).
-- Avatar: procedural Three.js chicken, no model files. Its wings are the arms. To use a rigged
+- Avatar: procedural Three.js chicken with a full skeleton (pelvis, torso, head, two-bone wings and legs), no model files. Its wings are the arms. To use a rigged
   glTF/VRM character instead, replace the model construction in `web/js/avatar.js` and keep `setArm()`/`update()`.
 
 ### Driving the robot from the browser
