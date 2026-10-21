@@ -1,20 +1,20 @@
 # Real Time Control of Articulated Robot via Pose Estimation (RTC-AROPE)
 
 Stand in front of a camera; your arm movements are replicated either on a goofy animated
-chicken in the browser, on a physical servo arm driven by an Arduino, or both at once.
+penguin in the browser, on a physical servo arm driven by an Arduino, or both at once.
 
 The original (2017-18) project did this with OpenPose + OpenCV + an Arduino and worked,
 but with high latency. This version keeps that hardware path and adds a browser app.
 
-## 1. Browser: the Mirror Chicken
+## 1. Browser: the Mirror Penguin
 
 ```
 npm run serve        # then open http://localhost:8000
 ```
 
-Click **Start camera**, step back so the camera sees your whole body, and move. The chicken copies your
+Click **Start camera**, step back so the camera sees your whole body, and move. The penguin copies your
 head, torso lean and twist, whole-body turns (up to about 70° either way), both arms, both legs, squats, and sideways position.
-A single camera can't tell front from back, so past that angle the chicken holds its last good turn instead of flipping. Parts that are out of frame
+A single camera can't tell front from back, so past that angle the penguin holds its last good turn instead of flipping. Parts that are out of frame
 (e.g. your legs at a desk) relax to rest instead of flailing. Both hands above your head makes it squawk. **Demo** runs
 a synthetic person if you have no camera. Everything runs on-device; no video is uploaded.
 (Three.js and MediaPipe load from the jsDelivr CDN and the pose model from Google's
@@ -22,12 +22,12 @@ MediaPipe bucket, so the first load needs internet.)
 
 - Pose: MediaPipe PoseLandmarker (BlazePose) with 3D *world* landmarks, GPU delegate with CPU fallback.
 - Smoothing: One Euro filter per landmark coordinate (adaptive: smooth when still, responsive when moving).
-- Avatar: procedural Three.js chicken with a full skeleton (pelvis, torso, head, two-bone wings and legs), no model files. Its wings are the arms. To use a rigged
+- Avatar: procedural Three.js penguin, no model files. The flippers and legs are smooth skinned meshes on two-bone skeletons, so elbows and knees bend like rubber; the head, torso and pelvis are driven too. Bones ease toward their targets (`FOLLOW_RATE` in `web/js/avatar.js`: lower = silkier, higher = snappier). To use a rigged
   glTF/VRM character instead, replace the model construction in `web/js/avatar.js` and keep `setArm()`/`update()`.
 
 ### Driving the robot from the browser
 Flash the firmware (below), click **Connect Arduino** (Chrome/Edge only, uses Web Serial)
-and pick which of your arms drives it. The chicken and the robot move together.
+and pick which of your arms drives it. The penguin and the robot move together.
 
 ## 2. Hardware: Arduino arm
 

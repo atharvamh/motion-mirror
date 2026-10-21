@@ -3,20 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mirror Chicken</title>
-<meta name="description" content="Move in front of your camera and a chicken copies your whole body. Optionally drives a real robot arm.">
+<title>Mirror Penguin</title>
+<meta name="description" content="Move in front of your camera and a penguin copies your whole body. Optionally drives a real robot arm.">
 <link rel="stylesheet" href="style.css">
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js" } }
 </script>
 </head>
 <body>
-<canvas id="stage" aria-label="Animated chicken that copies your body movements"></canvas>
+<canvas id="stage" aria-label="Animated penguin that copies your body movements"></canvas>
 
 <header class="top">
   <div class="brand">
-    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><ellipse cx="16" cy="19" rx="10" ry="11" fill="#fff6e8" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="8" r="3.4" fill="var(--accent)"/></svg>
-    <div><h1>Mirror Chicken</h1><p>Full-body motion capture, in poultry</p></div>
+    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><ellipse cx="16" cy="18" rx="10" ry="12" fill="#2c3450"/><ellipse cx="16" cy="21" rx="6" ry="8" fill="#fbfbf8"/><circle cx="16" cy="12" r="2.2" fill="var(--accent)"/></svg>
+    <div><h1>Mirror Penguin</h1><p>Full-body motion capture, in a tuxedo</p></div>
   </div>
   <p id="status" class="pill" role="status">Press Start and step back so you're in frame.</p>
   <ul class="chips" id="chips" hidden aria-label="Tracked body parts">
@@ -27,7 +27,7 @@
   </ul>
 </header>
 
-<div id="bawk" hidden>BAWK!</div>
+<div id="bawk" hidden>HONK!</div>
 
 <section id="preview" class="card" hidden aria-label="Camera preview">
   <video id="video" playsinline muted></video>
@@ -44,12 +44,10 @@
 <aside id="robot" class="card" hidden aria-label="Robot arm">
   <h2>Robot arm</h2>
   <p class="hint">Mirrors one of your arms on a real servo arm over USB. Chrome or Edge.</p>
-  <div class="row">
-    <button id="connect" type="button">Connect Arduino</button>
-    <select id="side" aria-label="Which of your arms drives the robot">
-      <option value="right">My right arm</option>
-      <option value="left">My left arm</option>
-    </select>
+  <button id="connect" type="button" class="wide">Connect Arduino</button>
+  <div class="seg" role="radiogroup" aria-label="Which of your arms drives the robot">
+    <label><input type="radio" name="side" value="right" checked><span>My right arm</span></label>
+    <label><input type="radio" name="side" value="left"><span>My left arm</span></label>
   </div>
   <label class="switch"><input type="checkbox" id="claw"><span class="track"></span>Claw open</label>
   <dl class="tiles">

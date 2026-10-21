@@ -8,7 +8,7 @@ import { Sender } from './protocol.js';
 import { toServo } from './robot.js';
 
 const $ = (id) => document.getElementById(id);
-const ui = { video: $('video'), overlay: $('overlay'), status: $('status'), bawk: $('bawk'), side: $('side'), claw: $('claw'), chips: $('chips') };
+const ui = { video: $('video'), overlay: $('overlay'), status: $('status'), bawk: $('bawk'), claw: $('claw'), chips: $('chips') };
 const avatar = new Avatar($('stage'));
 const link = new RobotLink();
 const sender = new Sender((wire) => link.write(wire), 30);
@@ -66,7 +66,7 @@ function updateChips(ok) {
 
 function drive(p, tSec) {
   // Reflection preserves angles, so the mirrored scene-space points give the same joint angles.
-  const side = ui.side.value, a = ARM[side];
+  const side = document.querySelector('input[name="side"]:checked').value, a = ARM[side];
   if (!p.ok[side === 'right' ? 'RArm' : 'LArm']) return;
   const [elev, flex] = armAngles(p.pts[a.shoulder], p.pts[a.elbow], p.pts[a.wrist], p.pts[a.hip] ?? hipFallback(p, a));
   if (elev === null || flex === null) return;
@@ -123,7 +123,7 @@ function frame(now) {
       const arms = p.ok.RArm || p.ok.LArm, legs = p.ok.RLeg || p.ok.LLeg;
       say(!arms ? 'Step back so your arms are in view.' : !legs ? 'Upper body only. Step back to bring your legs in, too.' : 'Full body tracked. Go wild.');
     }
-    // both wrists above the nose = chicken has opinions
+    // both wrists above the nose = penguin has opinions
     ui.bawk.hidden = !(p.pts[LM.L_WRIST] && p.pts[LM.R_WRIST] && p.pts[LM.NOSE]
       && p.pts[LM.L_WRIST][1] > p.pts[LM.NOSE][1] && p.pts[LM.R_WRIST][1] > p.pts[LM.NOSE][1]);
   } else if (source) {
