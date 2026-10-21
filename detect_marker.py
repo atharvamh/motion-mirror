@@ -1,5 +1,5 @@
 """Standalone ArUco marker viewer, for checking that the claw trigger marker is seen."""
-import cv2
+import cv2  # type: ignore[import-not-found]
 
 from rtc.claw import ArucoClaw
 
