@@ -1,0 +1,3 @@
+opencv-contrib-python>=4.7   # contrib build is required for cv2.aruco
+mediapipe>=0.10.14
+pyserial>=3.5

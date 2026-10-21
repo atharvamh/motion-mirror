@@ -1,0 +1,8 @@
+{
+  "name": "rtc-arope",
+  "private": true,
+  "scripts": {
+    "test": "node --test web/tests/*.test.js && python3 -m unittest discover -s tests -t .",
+    "serve": "python3 -m http.server -d web 8000"
+  }
+}

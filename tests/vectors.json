@@ -1,0 +1,25 @@
+{
+  "_doc": "Shared by the Python and JS test suites so both implementations stay in lock-step. Landmark axes: x right, y DOWN, z toward camera negative (MediaPipe world coords).",
+  "kinematics": [
+    {"name": "arm hanging down, straight", "shoulder": [0,0,0], "elbow": [0,0.3,0], "wrist": [0,0.55,0], "hip": [0,0.5,0], "elevation": 0, "flexion": 0},
+    {"name": "arm out to the side, straight", "shoulder": [0,0,0], "elbow": [0.3,0,0], "wrist": [0.55,0,0], "hip": [0,0.5,0], "elevation": 90, "flexion": 0},
+    {"name": "arm overhead, elbow bent 90", "shoulder": [0,0,0], "elbow": [0,-0.3,0], "wrist": [0.25,-0.3,0], "hip": [0,0.5,0], "elevation": 180, "flexion": 90},
+    {"name": "arm pointing at camera", "shoulder": [0,0,0], "elbow": [0,0,-0.3], "wrist": [0,0,-0.55], "hip": [0,0.5,0], "elevation": 90, "flexion": 0},
+    {"name": "arm 45 degrees out", "shoulder": [0,0,0], "elbow": [0.3,0.3,0], "wrist": [0.55,0.55,0], "hip": [0,0.5,0], "elevation": 45, "flexion": 0},
+    {"name": "degenerate: wrist on elbow", "shoulder": [0,0,0], "elbow": [0,0.3,0], "wrist": [0,0.3,0], "hip": [0,0.5,0], "elevation": 0, "flexion": null}
+  ],
+  "robot": [
+    {"elevation": 0,   "flexion": 0,   "shoulder": 40,  "elbow": 120},
+    {"elevation": 90,  "flexion": 0,   "shoulder": 110, "elbow": 120},
+    {"elevation": 90,  "flexion": 150, "shoulder": 110, "elbow": 160},
+    {"elevation": 45,  "flexion": 90,  "shoulder": 75,  "elbow": 160},
+    {"elevation": 180, "flexion": 0,   "shoulder": 180, "elbow": 120},
+    {"elevation": 200, "flexion": -5,  "shoulder": 180, "elbow": 120}
+  ],
+  "protocol": [
+    {"claw": true,  "shoulder": 110, "elbow": 120, "wire": "1110120\n"},
+    {"claw": false, "shoulder": 40,  "elbow": 180, "wire": "0040180\n"},
+    {"claw": false, "shoulder": 5,   "elbow": 0,   "wire": "0005000\n"},
+    {"claw": true,  "shoulder": 999, "elbow": -20, "wire": "1180000\n"}
+  ]
+}
