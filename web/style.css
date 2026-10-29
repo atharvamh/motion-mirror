@@ -1,6 +1,5 @@
 :root {
-  /* Light only: the dark navy penguin needs a light backdrop to read. */
-  --bg-1: #f7faff; --bg-2: #dbe5f3;
+  /* Dark space with a green portal behind the figure; the cards stay light and frosted. */
   --ink: #1b2233; --muted: #667089;
   --card: rgba(255, 255, 255, .74); --line: rgba(27, 34, 51, .11);
   --accent: #ff5a47; --accent-ink: #fff; --ok: #1f9d55;
@@ -11,10 +10,20 @@
 html, body { height: 100%; }
 body {
   margin: 0; overflow: hidden; color: var(--ink);
-  background: radial-gradient(120% 90% at 50% 38%, var(--bg-1), var(--bg-2));
+  background:
+    radial-gradient(1.5px 1.5px at 12% 22%, #fff, transparent), radial-gradient(1px 1px at 78% 14%, #cfe, transparent), radial-gradient(1.5px 1.5px at 88% 62%, #fff, transparent),
+    radial-gradient(1px 1px at 8% 74%, #cfe, transparent), radial-gradient(1px 1px at 34% 9%, #fff, transparent), radial-gradient(1.5px 1.5px at 64% 88%, #cfe, transparent),
+    radial-gradient(120% 90% at 50% 45%, #0e3b2b, #061b1c 55%, #02080d);
   font: 15px/1.45 ui-sans-serif, "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+/* portal: bright lime ring around calm green depths */
+#portal { position: fixed; left: 50%; top: 46%; width: min(92vh, 80vw); aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, #0a3a22 0 38%, #17803f 54%, #6fdc4a 64%, #dfffa6 69%, rgba(223, 255, 166, 0) 73%);
+  box-shadow: 0 0 70px 14px rgba(120, 255, 110, .28); }
+#portal::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, rgba(190, 255, 140, .1), transparent 25%, rgba(190, 255, 140, .08) 50%, transparent 75%, rgba(190, 255, 140, .1));
+  mask: radial-gradient(circle, transparent 20%, #000 50%, #000 68%, transparent 72%); -webkit-mask: radial-gradient(circle, transparent 20%, #000 50%, #000 68%, transparent 72%); animation: spin 40s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 #stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
 [hidden] { display: none !important; }
 
@@ -22,9 +31,9 @@ body {
 .top { position: fixed; inset: 18px 22px auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; pointer-events: none; }
 .top > * { pointer-events: auto; }
 .brand { display: flex; align-items: center; gap: 12px; }
-.mark { width: 34px; height: 34px; color: var(--ink); }
-h1 { margin: 0; font-size: 1.05rem; font-weight: 700; letter-spacing: -.01em; }
-.brand p { margin: 0; font-size: .78rem; color: var(--muted); }
+.mark { width: 34px; height: 34px; }
+h1 { margin: 0; color: #fff; font-size: 1.05rem; font-weight: 700; letter-spacing: -.01em; }
+.brand p { margin: 0; font-size: .78rem; color: rgba(255, 255, 255, .72); }
 .pill { margin: 0; padding: 8px 16px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); backdrop-filter: blur(14px); font-size: .86rem; color: var(--muted); text-align: center; max-width: min(46ch, 38vw); }
 .chips { display: flex; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .chips li { display: flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); backdrop-filter: blur(14px); font-size: .8rem; font-weight: 600; color: var(--muted); transition: color .2s; }
@@ -75,10 +84,10 @@ button.wide { width: 100%; }
 .switch input:checked + .track { background: var(--accent); }
 .switch input:checked + .track::after { transform: translateX(16px); }
 
-/* squawk */
+/* burp */
 #bawk { position: fixed; top: 17%; left: 50%; transform: translateX(-50%) rotate(-4deg); padding: 6px 22px; font: 800 2.6rem/1.1 ui-rounded, system-ui, sans-serif; background: #fff; color: var(--accent); border: 4px solid #1d1a17; border-radius: 20px; box-shadow: 6px 6px 0 #1d1a17; animation: pop .25s ease-out; pointer-events: none; }
 @keyframes pop { from { transform: translateX(-50%) rotate(-4deg) scale(.4); } }
-@media (prefers-reduced-motion: reduce) { #bawk { animation: none; } button, .switch .track, .switch .track::after { transition: none; } }
+@media (prefers-reduced-motion: reduce) { #bawk { animation: none; } #portal::before { animation: none; } button, .switch .track, .switch .track::after { transition: none; } }
 
 @media (max-width: 760px) {
   .top { inset: 12px 12px auto; flex-wrap: wrap; }

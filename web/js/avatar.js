@@ -1,13 +1,13 @@
-// A procedural penguin with a smooth, skinned body: flippers and legs are single continuous
-// meshes bound to two-bone skeletons, so elbows and knees bend like rubber instead of showing
-// sticks and joint balls. No model files are needed. Each frame the tracked landmark directions
-// become bone targets, and every bone eases toward its target (FOLLOW_RATE) for fluid motion.
-// To use a rigged glTF/VRM character later, replace the model construction and keep
-// update(pose, tSec, dt).
+// A procedural, human-proportioned scientist in a lab coat with spiky blue hair (a homage to a certain
+// mad-scientist cartoon, built from primitives). Arms and legs are single continuous meshes bound to
+// two-bone skeletons, so elbows and knees bend smoothly instead of showing sticks and joint balls. No
+// model files are needed. Each frame the tracked landmark directions become bone targets, and every
+// bone eases toward its target (FOLLOW_RATE) for fluid motion. To use a rigged glTF/VRM character
+// later, replace the model construction and keep update(pose, tSec, dt).
 import * as THREE from 'three';
 import { LM, bodyYaw, legCompression } from './kinematics.js';
 
-const ARM_LEN = [0.6, 0.55], LEG_LEN = [0.36, 0.36];     // lengths are cosmetic: only the tracked directions drive the bones
+const ARM_LEN = [0.55, 0.5], LEG_LEN = [0.9, 0.9];       // lengths are cosmetic: only the tracked directions drive the bones
 const LEG_TOTAL = LEG_LEN[0] + LEG_LEN[1];
 const UP = new THREE.Vector3(0, 1, 0);
 const DOWN = new THREE.Vector3(0, -1, 0);
@@ -16,12 +16,19 @@ const DOWN = new THREE.Vector3(0, -1, 0);
 // (22/s is a ~45 ms time constant). Parts that leave the frame relax to rest at the slower rate.
 const FOLLOW_RATE = 22, RELAX_RATE = 5;
 
-const DARK = new THREE.Color(0x2c3450), WHITE = new THREE.Color(0xfbfbf8), FACE = new THREE.Color(0xe3e7f0), BLUSH = new THREE.Color(0xff9fb2);   // face is a touch greyer so the pure-white eyes stand out
-const mat = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.42, ...extra });
+const mat = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.55, ...extra });
 const M = {
-  body: mat(0xffffff, { vertexColors: true, roughness: 0.62 }),
-  flipper: mat(0x2c3450),
-  orange: mat(0xff9a1f),
+  coat: mat(0xe9edf2, { roughness: 0.75 }),
+  shirt: mat(0x7fc8e6, { roughness: 0.7 }),
+  pants: mat(0x7a5638, { roughness: 0.8 }),
+  shoe: mat(0x2a2a2e, { roughness: 0.5 }),
+  sole: mat(0xd9d9d9, { roughness: 0.6 }),
+  skin: mat(0xf0d5b6, { roughness: 0.6 }),
+  hair: mat(0x9fdcf0, { roughness: 0.6 }),
+  brow: mat(0x7a8590),
+  mouth: mat(0x3a1414),
+  teeth: mat(0xf6f1dc, { roughness: 0.4 }),
+  drool: mat(0xcfe8f5, { roughness: 0.1, transparent: true, opacity: 0.8 }),
   eyeWhite: mat(0xffffff, { roughness: 0.15 }),
   eyeBlack: mat(0x111111, { roughness: 0.25 }),
 };
@@ -34,22 +41,10 @@ function mesh(geo, material, pos = [0, 0, 0], scale = [1, 1, 1]) {
   return m;
 }
 
-/** Unit sphere painted per vertex by `paint(nx, ny, nz, outColor)`. Smooth fades, so there are no seams or z-fighting decals. */
-function paintedSphere(paint) {
-  const geo = new THREE.SphereGeometry(1, 64, 48);
-  const pos = geo.attributes.position, colors = new Float32Array(pos.count * 3), c = new THREE.Color();
-  for (let i = 0; i < pos.count; i++) {
-    paint(pos.getX(i), pos.getY(i), pos.getZ(i), c);
-    c.toArray(colors, i * 3);
-  }
-  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-  return geo;
-}
-
 /**
  * A smooth tube hanging down from its root, skinned to two bones (root + joint) with a soft
  * blend around the joint, so it bends like rubber. radius(t) gives the radius along t = 0..1 (top to
- * bottom); `flat` squashes the cross-section (flippers are flat); the ends are rounded.
+ * bottom); `flat` squashes the cross-section (0.5 would make it a flat ribbon); the ends are rounded.
  */
 function skinnedTube({ lens, radius, flat = 1, material, blend = 0.35 }) {
   const total = lens[0] + lens[1], N = 48, cap = 0.12;
@@ -84,26 +79,62 @@ function skinnedTube({ lens, radius, flat = 1, material, blend = 0.35 }) {
   return { mesh: skinned, root, joint, end: lens[1], tRoot: new THREE.Quaternion(), tJoint: new THREE.Quaternion() };
 }
 
-function buildFlipper() {
-  return skinnedTube({ lens: ARM_LEN, radius: (t) => 0.27 - 0.1 * t, flat: 0.5, material: M.flipper });
+function buildArm() {
+  const arm = skinnedTube({ lens: ARM_LEN, radius: (t) => 0.125 - 0.04 * t, material: M.coat, blend: 0.3 });
+  arm.joint.add(mesh(new THREE.SphereGeometry(1, 24, 16), M.skin, [0, -arm.end - 0.04, 0], [0.075, 0.12, 0.055]));   // hand
+  return arm;
 }
 
 function buildLeg() {
-  const leg = skinnedTube({ lens: LEG_LEN, radius: (t) => 0.16 - 0.03 * t, material: M.orange });
+  const leg = skinnedTube({ lens: LEG_LEN, radius: (t) => 0.17 - 0.07 * t, material: M.pants, blend: 0.25 });
   leg.foot = new THREE.Group();                                     // kept flat on the floor and facing the pelvis each frame
   leg.foot.position.y = -leg.end;
-  leg.foot.add(mesh(new THREE.SphereGeometry(1, 28, 18), M.orange, [0, -0.03, 0.2], [0.38, 0.1, 0.52]));
+  leg.foot.add(mesh(new THREE.SphereGeometry(1, 28, 18), M.shoe, [0, -0.07, 0.1], [0.13, 0.08, 0.29]));
+  leg.foot.add(mesh(new THREE.SphereGeometry(1, 28, 10), M.sole, [0, -0.13, 0.1], [0.14, 0.025, 0.3]));
   leg.joint.add(leg.foot);
   return leg;
 }
 
+const EYE_R = 0.115, PUPIL_R = 0.026, WOBBLE_R = 0.06;
 function buildEye(x) {
   const eye = new THREE.Group();
-  eye.position.set(x, 0.52, 0.58);
-  eye.add(mesh(new THREE.SphereGeometry(0.33, 28, 18), M.eyeWhite));
-  const pupil = mesh(new THREE.SphereGeometry(0.16, 20, 14), M.eyeBlack, [0, 0, 0.25]);
+  eye.position.set(x, 0.4, 0.235);
+  eye.add(mesh(new THREE.SphereGeometry(EYE_R, 28, 18), M.eyeWhite));
+  const pupil = mesh(new THREE.SphereGeometry(PUPIL_R, 20, 14), M.eyeBlack, [0, 0, EYE_R - 0.004]);
   eye.add(pupil);
   return { eye, pupil, vx: 0, vy: 0, px: 0, py: 0 };                // spring state for the googly wobble
+}
+
+/** The lab coat as a single lathe: a smooth spline through hem, waist, chest and shoulders (the cross-section is squashed in z by the caller). */
+function buildCoat() {
+  const spline = new THREE.SplineCurve([[0.4, -0.34], [0.37, -0.2], [0.32, -0.02], [0.29, 0.3], [0.35, 0.62], [0.44, 0.88], [0.45, 1.0], [0.37, 1.12], [0.2, 1.18], [0.12, 1.2]].map(([r, y]) => new THREE.Vector2(r, y)));
+  const profile = [new THREE.Vector2(1e-4, -0.34), ...spline.getPoints(60)];
+  return new THREE.LatheGeometry(profile, 56);
+}
+
+/** Spiky swept-back hair: a cap on the skull plus tapered cones fanned over the crown. */
+function buildHair() {
+  const hair = new THREE.Group(), tilt = -0.4, R = [0.3, 0.38, 0.31];
+  const cap = mesh(new THREE.SphereGeometry(1, 32, 16, 0, Math.PI * 2, 0, 0.95), M.hair, [0, 0.3, 0], R.map((r) => r * 1.04));
+  cap.rotation.x = tilt;
+  hair.add(cap);
+  const pole = new THREE.Vector3(0, 1, 0).applyAxisAngle(new THREE.Vector3(1, 0, 0), tilt);
+  const side = new THREE.Vector3(1, 0, 0), back = new THREE.Vector3().crossVectors(side, pole);
+  const rings = [[0, 1, 0.34], [0.32, 6, 0.28], [0.62, 11, 0.24], [0.88, 14, 0.2]];     // [angle from the crown pole, spikes, length]
+  let n = 0;
+  for (const [ang, count, len] of rings) {
+    for (let i = 0; i < count; i++, n++) {
+      const az = (i / count) * Math.PI * 2 + ang * 2.1, j = Math.sin(n * 12.9898) * 0.5;   // deterministic jitter
+      const d = new THREE.Vector3().addScaledVector(pole, Math.cos(ang)).addScaledVector(side, Math.sin(ang) * Math.cos(az)).addScaledVector(back, Math.sin(ang) * Math.sin(az)).normalize();
+      const dir = d.clone().add(new THREE.Vector3(0, 0.45, -0.3)).normalize();           // sweep up and back
+      const L = len * (1 + 0.25 * j);
+      const spike = mesh(new THREE.ConeGeometry(0.065, L, 10), M.hair);
+      spike.position.set(R[0] * d.x * 1.0, 0.3 + R[1] * d.y, R[2] * d.z).addScaledVector(dir, L * 0.35);
+      spike.quaternion.setFromUnitVectors(UP, dir);
+      hair.add(spike);
+    }
+  }
+  return hair;
 }
 
 export class Avatar {
@@ -112,19 +143,19 @@ export class Avatar {
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(36, 1, 0.1, 60);
-    this.camera.position.set(0, 1.9, 10);
-    this.camera.lookAt(0, 1.75, 0);
-    this.scene.add(new THREE.HemisphereLight(0xffffff, 0x8899aa, 1.5));
-    const sun = new THREE.DirectionalLight(0xffffff, 2.2);
+    this.camera.position.set(0, 2.2, 10.5);
+    this.camera.lookAt(0, 2.0, 0);
+    this.scene.add(new THREE.HemisphereLight(0xffffff, 0x8899aa, 1.2));
+    const sun = new THREE.DirectionalLight(0xffffff, 1.9);
     sun.position.set(3, 7, 6);
-    const rim = new THREE.DirectionalLight(0xa9c4ff, 1.6);        // cool back light so the dark body keeps an edge on dark backgrounds
+    const rim = new THREE.DirectionalLight(0xa9c4ff, 1.2);        // cool back light so the figure keeps an edge against the backdrop
     rim.position.set(-4, 4, -6);
     this.scene.add(sun, rim);
 
-    // rig (x motion) > pelvis (squat drop, yaw) > torso (lean/twist) > neck/head, flippers;  pelvis > legs
+    // rig (x motion) > pelvis (squat drop, yaw) > torso (lean/twist) > neck/head, arms;  pelvis > legs
     const rig = this.rig = new THREE.Group();
     this.scene.add(rig);
-    const shadow = mesh(new THREE.CircleGeometry(1.9, 48), mat(0x1d2a44, { transparent: true, opacity: 0.2 }), [0, 0.01, 0.1]);
+    const shadow = mesh(new THREE.CircleGeometry(1.3, 48), mat(0x03140c, { transparent: true, opacity: 0.35 }), [0, 0.01, 0.1]);
     shadow.rotation.x = -Math.PI / 2;
     rig.add(shadow);
     this.pelvis = new THREE.Group();
@@ -133,35 +164,45 @@ export class Avatar {
 
     this.torso = new THREE.Group();
     this.pelvis.add(this.torso);
-    // body: dark back, white belly that fades out over the throat and sides
-    const belly = (x, y, z, out) => out.copy(DARK).lerp(WHITE, smoothstep(0.1, 0.4, z - 0.8 * x * x) * (1 - smoothstep(0.65, 0.88, y)));
-    this.torso.add(mesh(paintedSphere(belly), M.body, [0, 0.95, 0], [1.14, 1.06, 0.98]));
-    const tail = mesh(new THREE.ConeGeometry(0.36, 0.7, 24), M.flipper, [0, 0.1, -0.85]);
-    tail.rotation.x = -Math.PI / 2 - 0.5;
-    this.torso.add(tail);
+    this.torso.add(mesh(buildCoat(), M.coat, [0, 0, 0], [1, 1, 0.68]));                                            // one smooth coat: hem, waist, chest, shoulders
+    this.torso.add(mesh(new THREE.SphereGeometry(1, 24, 16), M.shirt, [0, 0.88, 0.29], [0.15, 0.3, 0.05]));       // shirt showing through the open coat
+    this.torso.add(mesh(new THREE.CylinderGeometry(0.085, 0.1, 0.22, 20), M.skin, [0, 1.22, 0]));                 // neck
+    const collar = mesh(new THREE.TorusGeometry(0.14, 0.042, 12, 28), M.coat, [0, 1.21, 0], [1, 1, 1.1]);
+    collar.rotation.x = Math.PI / 2;
+    this.torso.add(collar);
 
     this.neck = new THREE.Group();
-    this.neck.position.set(0, 1.78, 0.08);
+    this.neck.position.set(0, 1.3, 0.01);
     this.torso.add(this.neck);
     this.head = this.neck;
-    const face = (x, y, z, out) => {
-      out.copy(DARK).lerp(FACE, smoothstep(0.08, 0.34, z - 0.55 * x * x) * smoothstep(-0.85, -0.45, y) * (1 - smoothstep(0.3, 0.65, y)));
-      const cheek = (cx) => Math.max(0, 1 - Math.hypot(x - cx, y + 0.18, z - 0.78) / 0.3);    // rosy cheeks, painted smoothly
-      out.lerp(BLUSH, 0.75 * Math.max(cheek(-0.58), cheek(0.58)) ** 0.8);
-    };
-    this.head.add(mesh(paintedSphere(face), M.body, [0, 0.5, 0], [1.02, 0.9, 0.9]));
-    this.head.add(mesh(new THREE.SphereGeometry(1, 28, 18), M.orange, [0, 0.28, 0.86], [0.2, 0.12, 0.24]));   // little beak
-    this.eyes = [buildEye(-0.38), buildEye(0.38)];
+    this.head.add(mesh(new THREE.SphereGeometry(1, 40, 28), M.skin, [0, 0.3, 0], [0.29, 0.37, 0.3]));
+    this.head.add(mesh(new THREE.SphereGeometry(1, 16, 12), M.skin, [0, 0.27, 0.3], [0.05, 0.075, 0.07]));        // big nose
+    this.mouth = new THREE.Group();                                                                                // wide, wonky open mouth: opens when burping
+    this.mouth.position.set(0, 0.13, 0.262);
+    this.mouth.rotation.z = 0.08;
+    this.mouthHole = mesh(new THREE.SphereGeometry(1, 20, 12), M.mouth, [0, 0, 0], [0.1, 0.03, 0.03]);
+    this.mouth.add(this.mouthHole, mesh(new THREE.SphereGeometry(1, 16, 8), M.teeth, [0, 0.014, 0.012], [0.075, 0.012, 0.02]));
+    this.drool = mesh(new THREE.CapsuleGeometry(0.012, 0.09, 4, 8), M.drool, [0.075, -0.07, 0.012]);               // a strand of drool from the corner
+    this.mouth.add(this.drool);
+    this.head.add(this.mouth);
+    for (const x of [-1, 1]) {
+      this.head.add(mesh(new THREE.SphereGeometry(1, 16, 12), M.skin, [x * 0.285, 0.3, 0], [0.04, 0.07, 0.035]));   // ears
+      const brow = mesh(new THREE.SphereGeometry(1, 16, 8), M.brow, [x * 0.12, 0.535, 0.225], [0.115, 0.022, 0.035]);
+      brow.rotation.z = x * 0.28;                                                                                   // inner ends low: manic
+      this.head.add(brow);
+    }
+    this.head.add(buildHair());
+    this.eyes = [buildEye(-0.105), buildEye(0.105)];
     this.eyes.forEach((e) => this.head.add(e.eye));
 
     // Limbs are named by screen side: "plus" (+x) follows the user's RIGHT side in the mirrored view.
     const place = (limb, parent, x, y) => { limb.root.position.set(x, y, 0); parent.add(limb.mesh); };
-    this.arms = { plus: buildFlipper(), minus: buildFlipper() };
-    place(this.arms.plus, this.torso, 0.9, 1.4);
-    place(this.arms.minus, this.torso, -0.9, 1.4);
+    this.arms = { plus: buildArm(), minus: buildArm() };
+    place(this.arms.plus, this.torso, 0.45, 1.02);
+    place(this.arms.minus, this.torso, -0.45, 1.02);
     this.legs = { plus: buildLeg(), minus: buildLeg() };
-    place(this.legs.plus, this.pelvis, 0.42, 0.1);
-    place(this.legs.minus, this.pelvis, -0.42, 0.1);
+    place(this.legs.plus, this.pelvis, 0.2, 0.15);
+    place(this.legs.minus, this.pelvis, -0.2, 0.15);
 
     this._v = new THREE.Vector3();
     this._w = new THREE.Vector3();
@@ -174,6 +215,7 @@ export class Avatar {
     this.headTarget = new THREE.Quaternion();
     this.yaw = 0; this.yawTarget = 0;
     this.drop = 0;
+    this.burp = 0;
   }
 
   resize() {
@@ -230,7 +272,7 @@ export class Avatar {
     const k = 1 - Math.exp(-step * FOLLOW_RATE), kr = 1 - Math.exp(-step * RELAX_RATE);
 
     // whole-body turn: the pelvis (and so the legs) follows the hip line, or the shoulders if the hips are out of frame.
-    // Out-of-range or ambiguous readings hold the last good yaw instead of letting the penguin flip around.
+    // Out-of-range or ambiguous readings hold the last good yaw instead of letting the figure flip around.
     const yawIn = ok.hips ? bodyYaw(pts[LM.R_HIP], pts[LM.L_HIP]) : ok.torso ? bodyYaw(pts[LM.R_SHOULDER], pts[LM.L_SHOULDER], 0.36) : null;
     if (yawIn !== null) this.yawTarget = yawIn;
     else if (!ok.hips && !ok.torso) this.yawTarget *= 1 - kr;
@@ -287,6 +329,14 @@ export class Avatar {
     this.pelvis.position.y = LEG_TOTAL - this.drop + Math.sin(tSec * 3) * 0.02;   // idle breathing bob
     this.rig.position.x += ((pose?.rootX ?? 0) - this.rig.position.x) * (pose ? k : kr);
 
+    // burp: both wrists above the nose opens the mouth wide, with a gurgling wobble; otherwise a manic half-open grin
+    const burp = ok.RArm && ok.LArm && ok.head && pts[LM.R_WRIST][1] > pts[LM.NOSE][1] && pts[LM.L_WRIST][1] > pts[LM.NOSE][1];   // scene y is up
+    this.burp += ((burp ? 1 : 0) - this.burp) * (1 - Math.exp(-step * 14));
+    const open = 0.9 + this.burp * (2.4 + Math.sin(tSec * 40) * 0.5) + Math.max(0, Math.sin(tSec * 1.7)) * 0.4;
+    this.mouthHole.scale.y = 0.03 * open;
+    this.mouthHole.position.y = -0.03 * (open - 1) * 0.6;
+    this.drool.scale.y = 1 + this.burp * 1.5 + Math.sin(tSec * 2.3) * 0.15;
+
     this._googly(dt);
     this.resize();
     this.renderer.render(this.scene, this.camera);
@@ -297,10 +347,10 @@ export class Avatar {
     const step = Math.min(dt, 0.033);
     const roll = (this.head.rotation.z - (this._prevRoll ?? this.head.rotation.z)) / Math.max(step, 1e-3);
     this._prevRoll = this.head.rotation.z;
-    const R = 0.14, k = 140, damp = 7;
+    const R = WOBBLE_R, k = 140, damp = 7;
     for (const e of this.eyes) {
-      e.vx += (-k * e.px + roll * 0.6 - damp * e.vx) * step;
-      e.vy += (-k * (e.py + 0.05) - damp * e.vy) * step;      // rests slightly low
+      e.vx += (-k * e.px + roll * 0.2 - damp * e.vx) * step;
+      e.vy += (-k * (e.py + 0.015) - damp * e.vy) * step;      // rests slightly low
       e.px += e.vx * step; e.py += e.vy * step;
       const r = Math.hypot(e.px, e.py);                       // stay inside the eyeball
       if (r > R) { e.px *= R / r; e.py *= R / r; e.vx *= -0.4; e.vy *= -0.4; }

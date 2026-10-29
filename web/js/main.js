@@ -123,7 +123,7 @@ function frame(now) {
       const arms = p.ok.RArm || p.ok.LArm, legs = p.ok.RLeg || p.ok.LLeg;
       say(!arms ? 'Step back so your arms are in view.' : !legs ? 'Upper body only. Step back to bring your legs in, too.' : 'Full body tracked. Go wild.');
     }
-    // both wrists above the nose = penguin has opinions
+    // both wrists above the nose = scientist burps
     ui.bawk.hidden = !(p.pts[LM.L_WRIST] && p.pts[LM.R_WRIST] && p.pts[LM.NOSE]
       && p.pts[LM.L_WRIST][1] > p.pts[LM.NOSE][1] && p.pts[LM.R_WRIST][1] > p.pts[LM.NOSE][1]);
   } else if (source) {

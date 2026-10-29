@@ -3,20 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mirror Penguin</title>
-<meta name="description" content="Move in front of your camera and a penguin copies your whole body. Optionally drives a real robot arm.">
+<title>Mirror Scientist</title>
+<meta name="description" content="Move in front of your camera and a lab-coat scientist copies your whole body. Optionally drives a real robot arm.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js" } }
 </script>
 </head>
 <body>
-<canvas id="stage" aria-label="Animated penguin that copies your body movements"></canvas>
+<div id="portal" aria-hidden="true"></div>
+<canvas id="stage" aria-label="Animated scientist that copies your body movements"></canvas>
 
 <header class="top">
   <div class="brand">
-    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><ellipse cx="16" cy="18" rx="10" ry="12" fill="#2c3450"/><ellipse cx="16" cy="21" rx="6" ry="8" fill="#fbfbf8"/><circle cx="16" cy="12" r="2.2" fill="var(--accent)"/></svg>
-    <div><h1>Mirror Penguin</h1><p>Full-body motion capture, in a tuxedo</p></div>
+    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M7 15 5 5l5 4 2-6 4 5 4-5 1 6 5-3-3 9z" fill="#9fdcf0"/><ellipse cx="16" cy="19" rx="8" ry="9" fill="#f0d5b6"/><circle cx="12.5" cy="17" r="2.3" fill="#fff"/><circle cx="19.5" cy="17" r="2.3" fill="#fff"/><circle cx="12.8" cy="17.6" r=".9" fill="#111"/><circle cx="19.2" cy="17.6" r=".9" fill="#111"/><path d="M13 24h6" stroke="#4a2323" stroke-width="1.2" stroke-linecap="round"/></svg>
+    <div><h1>Mirror Scientist</h1><p>Full-body motion capture, in a lab coat</p></div>
   </div>
   <p id="status" class="pill" role="status">Press Start and step back so you're in frame.</p>
   <ul class="chips" id="chips" hidden aria-label="Tracked body parts">
@@ -27,7 +29,7 @@
   </ul>
 </header>
 
-<div id="bawk" hidden>HONK!</div>
+<div id="bawk" hidden>*burp*</div>
 
 <section id="preview" class="card" hidden aria-label="Camera preview">
   <video id="video" playsinline muted></video>

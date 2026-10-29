@@ -1,6 +1,6 @@
 // Browser smoke test (not part of `npm test`: needs playwright-core and a Chromium).
 //   npm i --no-save playwright-core && CHROMIUM=/path/to/chrome node web/tests/smoke.mjs
-// Serves web/ itself, then checks: demo mode renders a non-blank chicken and drives the
+// Serves web/ itself, then checks: demo mode renders a non-blank avatar and drives the
 // angle readouts, and the real camera path (fake webcam) loads the pose model and runs frames
 // without page errors. A fake webcam has no person in it, so "no pose" is the expected result.
 import { createServer } from 'node:http';
